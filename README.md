@@ -32,10 +32,9 @@ to find the shared resources (assumed as already deployed):
 ```shell
 export URL_ACCOUNT='1111111111'
 export URL_REGION='us-east-1'
-export URL_VPC_ID='vpc-22228723872'
 export URL_ZONE_NAME='URL.co'
 export URL_ZONE_ID='3333333333'
-export URL_ZONE_CERT='arn:aws:acm:us-east-1:1111111111:certificate/52e6f78e-c23e-4c83-80cc-d6d1316b644422228723872
+export URL_ZONE_CERT='arn:aws:acm:us-east-1:1111111111:certificate/XYZ-123'
 ```
 
 ## Deployment
