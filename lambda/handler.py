@@ -1,29 +1,29 @@
-import json
 import os
 import uuid
 import logging
+import time
 
 import boto3
 
-import time
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
 
-LOG = logging.getLogger()
-LOG.setLevel(logging.INFO)
+dynamodb = boto3.resource('dynamodb')
+table_name = os.environ.get('TABLE_NAME')
 
 
 def main(event, context):
-    LOG.info("EVENT: " + json.dumps(event))
+    logger.info("EVENT: " + str(event))
 
-    query_string_params = event["queryStringParameters"]
+    query_string_params = event.get("queryStringParameters")
     if query_string_params is not None:
-        target_url = query_string_params['targetUrl']
+        target_url = query_string_params.get('targetUrl')
         if target_url is not None:
             return create_short_url(event)
 
-    path_parameters = event['pathParameters']
-    if path_parameters is not None:
-        if path_parameters['proxy'] is not None:
-            return read_short_url(event)
+    path_parameters = event.get('pathParameters')
+    if path_parameters is not None and path_parameters.get('proxy') is not None:
+        return read_short_url(event)
 
     return {
         'statusCode': 200,
@@ -32,17 +32,8 @@ def main(event, context):
 
 
 def create_short_url(event):
-    # Pull out the DynamoDB table name from environment
-    table_name = os.environ.get('TABLE_NAME')
-
-    # Parse targetUrl
-    target_url = event["queryStringParameters"]['targetUrl']
-
-    # Create a unique id (take first 8 chars)
-    id = str(uuid.uuid4())[0:8]
-
-    # Create item in DynamoDB
-    dynamodb = boto3.resource('dynamodb')
+    target_url = event["queryStringParameters"].get('targetUrl')
+    id = str(uuid.uuid4())[:8]
     table = dynamodb.Table(table_name)
     ttl = str(int(time.time()) + 60 * 60 * 24 * 30)  # 30 days
     table.put_item(Item={
@@ -51,45 +42,26 @@ def create_short_url(event):
         'ttl': ttl
     })
     ttl_date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(ttl)))
-
-    # Create the redirect URL
-    url = "https://" \
-        + event["requestContext"]["domainName"] \
-        + event["requestContext"]["path"] \
-        + id
-
+    url = f"https://{event['requestContext']['domainName']}{event['requestContext']['path']}{id}"
     return {
         'statusCode': 200,
         'headers': {'Content-Type': 'text/plain'},
-        'body': "Created URL: %s with a TTL of %s" % (url, ttl_date)
+        'body': f"Created URL: {url} with a TTL of {ttl_date}"
     }
 
 
 def read_short_url(event):
-    # Parse redirect ID from path
-    id = event['pathParameters']['proxy']
-
-    # Pull out the DynamoDB table name from the environment
-    table_name = os.environ.get('TABLE_NAME')
-
-    # Load redirect target from DynamoDB
-    ddb = boto3.resource('dynamodb')
-    table = ddb.Table(table_name)
-    response = table.get_item(Key={'id': id})
-    LOG.debug("RESPONSE: " + json.dumps(response))
-
-    item = response.get('Item', None)
+    event_id = event['pathParameters']['proxy']
+    table = dynamodb.Table(table_name)
+    response = table.get_item(Key={'id': event_id})
+    item = response.get('Item')
     if item is None:
         return {
             'statusCode': 400,
             'headers': {'Content-Type': 'text/plain'},
-            'body': 'No redirect found for ' + id
+            'body': f'No redirect found for {event_id}'
         }
-
-    # Respond with a redirect
     return {
         'statusCode': 301,
-        'headers': {
-            'Location': item.get('target_url')
-        }
+        'headers': {'Location': item.get('target_url')}
     }

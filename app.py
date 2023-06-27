@@ -26,7 +26,7 @@ class UrlShortenerStack(URLStack):
                                   code=aws_lambda.Code.from_asset("./lambda"),
                                   handler="handler.main",
                                   timeout=Duration.minutes(5),
-                                  runtime=aws_lambda.Runtime.PYTHON_3_7)
+                                  runtime=aws_lambda.Runtime.PYTHON_3_9)
 
     # pass the table name to the handler through an environment variable and grant
     # the handler read/write permissions on the table.
