@@ -59,3 +59,19 @@ def create_short_url(event, ttl_enabled):
         'headers': {'Content-Type': 'text/plain'},
         'body': f"Created URL: {url} with a TTL of {ttl_date}"
     }
+
+def read_short_url(event):
+    event_id = event['pathParameters']['proxy']
+    table = dynamodb.Table(table_name)
+    response = table.get_item(Key={'id': event_id})
+    item = response.get('Item')
+    if item is None:
+        return {
+            'statusCode': 400,
+            'headers': {'Content-Type': 'text/plain'},
+            'body': f'No redirect found for {event_id}'
+        }
+    return {
+        'statusCode': 301,
+        'headers': {'Location': item.get('target_url')}
+    }
