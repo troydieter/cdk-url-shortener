@@ -40,7 +40,7 @@ class UrlShortenerStack(URLStack):
     # map go.URL.co to this api gateway endpoint
     # the domain name is a shared resource that can be accessed through the API in URLStack
     # NOTE: you can comment this out if you want to bypass the domain name mapping
-    self.map_URL_subdomain('url', api)
+    self.map_URL_subdomain('io', api)
 
 app = App()
 UrlShortenerStack(app, "urlshort-app")

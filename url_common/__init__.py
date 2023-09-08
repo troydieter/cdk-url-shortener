@@ -9,6 +9,7 @@ REGION = os.environ.get('URL_REGION', 'YOUR_REGION')
 ZONE_NAME = os.environ.get('URL_ZONE_NAME', 'YOUR_ZONE_NAME')
 ZONE_ID = os.environ.get('URL_ZONE_ID', 'YOUR_ZONE_ID')
 ZONE_CERT = os.environ.get('URL_ZONE_CERT', 'YOUR_CERTIFICATE_ARN')
+VPC_ID = os.environ.get('VPC_ID', 'YOUR_VPC_ID')
 
 AWS_ENV = Environment(account=ACCOUNT, region=REGION)
 
